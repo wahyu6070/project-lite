@@ -1,8 +1,4 @@
-####################################
-#         Kopi Functions           #
-####################################
-#          By : wahyu6070          #
-####################################
+
 print(){
 	echo "$1"
 	}
@@ -24,9 +20,12 @@ sedlog(){
 	
 	
 #
-while_log(){
-	print "$1" | tee -a $log
+ERROR(){
+	printlog "[ERROR] <$1>"
+	[ -d $tmp ] && del $tmp
+	exit 1
 	}
+	
 listlog(){
 	print " " >> $log
 	print "▒▒▒▒▒▒▒▒▒▒▒▒▒ Folder List : $1 ▒▒▒▒▒▒▒▒▒▒▒▒▒" >> $log
@@ -42,39 +41,6 @@ listlog(){
 	}
 
 getp(){ grep "^$1" "$2" | head -n1 | cut -d = -f 2; }
-
-loadings() {
-  PID=$!
-  a=0;
-  while [ -d /proc/$PID ]; do
-    b=$((+1))
-    a=$((a+1))
-    sleep 0.9s
-    printf "\r${@} [${a}Second]"
-  done
-}
-
-loadingm() {
-  PID=$!
-  a=0
-  while [ -d /proc/$PID ]; do
-    b=$((a+1))
-    a=$((h+1))
-    sleep 59.9s
-    printf "\r${@} [${b}Minutes]"
-  done
-}
-
-loadingz() {
-  PID=$!
-  a=0
-  while [ -d /proc/$PID ]; do
-    b=$((a+1))
-    a=$((a+1))
-    sleep 0.9s
-    printf "#"
-  done
-}
 
 printmid() {
   local CHAR=$(printf "$@" | sed 's|\\e[[0-9;]*m||g' | wc -m)
@@ -167,11 +133,19 @@ clog(){
 	
 	
 #dec
-if [ $(uname -m) = *x86* ]; then
-ARCH32=x86
-else
-ARCH32=arm
-fi
+case $(uname -m) in
+aarch32 | armv7l) ARCH=arm
+;;
+aarch64 | armv8l) ARCH=arm64
+;;
+i386 | i486 |i586 | i686) ARCH=x86
+;;
+*x86_64*) ARCH=x86_64
+;;
+*) ERROR "Architecure not support <$(uname -m)>"
+;;
+esac
+
 
 #func active
 bash_color
