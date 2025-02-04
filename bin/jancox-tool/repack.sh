@@ -6,7 +6,7 @@
 #PATH
 jancox=`dirname "$(readlink -f $0)"`
 #functions
-. $jancox/bin/arm/kopi
+. $jancox/bin/functions
 #bin
 bin=$jancox/bin/$ARCH32
 bb=$bin/busybox
