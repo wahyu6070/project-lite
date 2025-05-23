@@ -30,16 +30,20 @@ MODULE_INSTALL(){
 
 	# Copying files
 	print "- Copying <$MODULE_TMP/system> to <$MODPATH/system>"
-	cp -rdf $MODULE_TMP/system/system/* $SYSTEM
+	cp -rdf $MODULE_TMP/system/system/* $SYSTEM/ 2>/dev/null
+	
 	
 	print "- Copying <$MODULE_TMP/product> to <$MODPATH/product>"
-	cp -rdf $MODULE_TMP/system/product/* $PRODUCT/
+	cp -rdf $MODULE_TMP/system/product/* $PRODUCT/ 2>/dev/null
+	
 	
 	print "- Copying <$MODULE_TMP/system_ext> to <$MODPATH/system_ext>"
-	cp -rdf $MODULE_TMP/system/system_ext/* $SYSTEM_EXT/
+	cp -rdf $MODULE_TMP/system/system_ext/* $SYSTEM_EXT/ 2>/dev/null
+	
 	
 	print "- Copying <$MODULE_TMP/vendor> to <$MODPATH/vendor>"
-	cp -rdf $MODULE_TMP/system/vendor/* $VENDOR/
+	cp -rdf $MODULE_TMP/system/vendor/* $VENDOR/ 2>/dev/null
+	
 	
 	if [ $packageid = "SetupWizard" ]; then
 		#add buildprop config
@@ -47,12 +51,10 @@ MODULE_INSTALL(){
 		#SETUP_WIZARD
 	fi
 }
-
 #PATH
 jancox=`dirname "$(readlink -f $0)"`
 #functions
-. $jancox/bin/arm/kopi
-#bin
+. $jancox/bin/functions
 bin=$jancox/bin/$ARCH32
 
 SYSTEM=$jancox/editor/system/system
@@ -62,35 +64,8 @@ VENDOR=$jancox/editor/vendor
 
 SDK=`getp ro.build.version.sdk $SYSTEM/build.prop`
 
-print " sdk = $SDK"
-
-
-file=$VENDOR/etc/fstab.qcom
 
 print "| SDK : $SDK";
-
-print "| Detected and modifying $file"
-cp -af $file ${file}.bak
-sed -ir 's|fileencryption|encryptable|' "$file"
-sed -ir 's|forceencrypt|encryptable|' "$file"
-sed -ir 's|forcefdeorfbe|encryptable|' "$file"
-sed -ir 's|,wrappedkey||' "$file"
-sed -ir 's|,avb=vbmeta_system,avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey||' "$file"
-sed -ir 's|,avb=vbmeta_system||' "$file"
-sed -ir 's|,support_scfs||' "$file"
-sed -ir 's|,fsverity||' "$file"
-sed -ir 's|,verifyatboot||' "$file"
-sed -ir 's|,verity||' "$file"
-sed -ir 's|,avb||' "$file"
-sed -ir 's|,quota||' "$file"
-sed -ir 's|,errors=panic||' "$file"
-        
-if [ "$SDK" -ge "33" ]; then
-sed -ir 's|encryptable=||' "$file"
-sed -ir 's|encryptable=||' "$file"
-sed -ir 's|encryptable=||' "$file"
-fi
-
 print "- installing package"
 
 TMPDIR=$jancox/files/tmpdir
@@ -109,7 +84,7 @@ if [ -d $MODULES ] && ! rmdir $MODULES 2>/dev/null; then
 			
 			if [ -f $MODULE_TMP/litegapps-prop ]; then
 				MODULE_INSTALL
-				print "- Remove $LIST_MODULES"
+				#print "- Remove $LIST_MODULES"
 				#del $LIST_MODULES
 			else
 				print "! Failed installing module <$(basename $LIST_MODULES)> skipping"
@@ -168,4 +143,36 @@ for G1 in $SYSTEM/media $PRODUCT/media $SYSTEM_EXT/media; do
 				chown 0:0 $BOOTANIM
 				break
 			fi
+done
+
+
+list_rm="
+Updater
+Jelly
+messaging
+Twelve
+Recorder
+Gallery2
+Glimpse
+ExactCalculator
+Etar
+DeskClock
+Camelot
+Dialer
+Contacts
+Stk
+Seedvault
+MatLog
+"
+
+print "- Debloating"
+for J in $list_rm; do
+for G1 in $SYSTEM $PRODUCT $SYSTEM_EXT; do
+	for G2 in priv-app app; do
+			if [ -d $G1/$G2/$J ]; then
+			print "- Remove file $G1/$G2/$J"
+			rm -rf  $G1/$G2/$J 
+			fi
+	done
+done
 done
